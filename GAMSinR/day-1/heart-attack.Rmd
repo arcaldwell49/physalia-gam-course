@@ -98,7 +98,7 @@ knitr::kable(broom::tidy(ck_model))
 
 ```{r}
 
-knitr::kable(broom::tidy(anova(ck_model, test = "Chisq")))
+knitr::kable(broom::tidy(anova(ck_model, test = "LRT")))
 ```
 
 
@@ -117,7 +117,8 @@ autoplot(ck_model, which = 1:6, label.size = 3)
 library(ggeffects)
 
 ggemmeans(ck_model,
-          c("ck")) %>% plot
+          c("ck")) %>% plot() + geom_point(data = ck,
+                                           aes(x=ck,y=proportion))
 ```
 
 
@@ -181,6 +182,6 @@ ggplot(ck3,
     
 ```{r}
 knitr::kable(broom::tidy(anova(ck_model, ck_model2,
-                               test = "Chisq")))
+                               test = "LRT")))
 ```
 
