@@ -3,6 +3,8 @@ title: "Belgium AIDS epidemic"
 author: "Gavin Simpson"
 date: "14/02/2022"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -18,7 +20,7 @@ The data set `belgium.csv` contains the number of cases (`cases`) of AIDS record
 Load the following packages
 
 ```{r load-packages}
-pkgs <- c("readr", "dplyr", "ggplot2")
+pkgs <- c("readr", "dplyr", "ggplot2", "here")
 vapply(pkgs, library, logical(1L), character.only = TRUE, logical.return = TRUE)
 ```
 
@@ -32,7 +34,7 @@ The data are contained in `data/belgium.csv`, and consist of three variables
 Load the data into R
 
 ```{r load-data}
-belgium <- read_csv(here("data", "belgium.csv"), col_types = "dd")
+belgium <- read_csv(here("data", "belgium-aids.csv"), col_types = "dd")
 belgium
 ```
 
@@ -51,13 +53,61 @@ belgium <- belgium %>%
 
 2. Fit a poisson GLM (log link) using the `glm()` to model the number of AIDS cases. Use `t` as the predictor variable
 
+```{r}
+
+m1 = glm(cases ~ t,
+         data = belgium,
+         family = poisson(link = "log"))
+```
+
+
 3. Produce the model summary using `summary()`
+
+```{r}
+summary(m1)
+```
+
 
 4. Calculate a quick goodness of fit test for the model using the information provided on the residual deviance
 
+```{r}
+anova(m1, test = "LRT")
+```
+
+
 5. Plot the model diagnostics
 
+```{r}
+library(ggfortify)
+autoplot(m1, which=1:4)
+```
+
+
 6. Add fitted values of the model as a line on to the plot you created earlier. Add a confidence interval to the fitted value line.
+
+```{r}
+library(ggeffects)
+
+df_pred = ggemmeans(m1, "t") %>%
+  as.data.frame() %>%
+  mutate(year = x + 1980)
+
+ggplot(belgium,
+       aes(x=year,y=cases)) +
+  geom_point()+
+  geom_line(data=df_pred,
+            aes(x=year,y=predicted)) +
+  geom_ribbon(data=df_pred,
+            aes(x=year,
+                y=predicted,
+                ymin=conf.low,
+                ymax=conf.high),
+            alpha = .25)
+
+
+
+```
+
 
 7. Looking at the model diagnostics and the plot of the fitted values versus the data, identify a problem with this model. Describe the problem in a few words.
 
@@ -65,8 +115,32 @@ belgium <- belgium %>%
 
     Hint: use ploynomials of `t`
 
+```{r}
+m2 = update(m1, . ~ poly(t,2))
+summary(m2)
+
+pchisq(deviance(m2),df.residual(m2),lower.tail=FALSE)
+```
+
+
 9. Look at the model summary, model diagnostic plots, and perform the goodness of fit test on the residual deviance. Are there any problems with this model?
 
 10. Compare the two models using AIC and a generalized likelihood ratio test (GLRT). Which model is to be preferred?
 
     Hint: the `anova()` function is used to do the GLRT
+    
+```{r}
+library(performance)
+compare_performance(m1,m2, verbose = FALSE)
+
+test_performance(m1,m2)
+```
+
+## GAM
+
+```{r}
+library(mgcv)
+
+
+```
+
