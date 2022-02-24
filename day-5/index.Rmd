@@ -1043,11 +1043,17 @@ In {mgcv} 📦 special `family` functions are provided for some distributions wh
 Provide a list of formulas, 1 per linear predictor
 
 ```{r eval = FALSE}
-gam(list(accel ~ s(times, k = 20, bs = "ad"),
+test = gam(list(accel ~ s(times, k = 20, bs = "ad"),
                ~ s(times, k = 10)),
          data = mcycle,
          method = "REML", # <== IIRC REML is only option for these LSS
          family = gaulss())
+
+summary(test)
+
+gratia::draw(test)
+#fitted_samples(test,mcycle,seed=5,n=10)
+ggemmeans(test, terms = "times") %>% plot()
 ```
 
 And you need to really understand how these models are parameterised internally and what they are actually fitting and returning
@@ -1106,7 +1112,7 @@ Implemented in the {qgam} 📦 that builds upon {mgcv} so stuff just works
 ```{r qgam-example, results = "hide"}
 ## Load the mcycle data
 data(mcycle, package = "MASS")
-
+library(qgam)
 ## Fit QGAM using an adaptive smoother
 m_q <- qgam(accel ~ s(times, k = 20, bs = "ad"),
             data = mcycle, # <== no family either
